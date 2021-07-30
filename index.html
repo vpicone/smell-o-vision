@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Document</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+  </head>
+  <body>
+    <canvas
+      style="position: absolute; pointer-events: none"
+      id="canvas"
+      height="360"
+      width="640"
+    ></canvas>
+    <video
+      loop
+      muted
+      controls
+      src="crowd.mp4"
+      id="video"
+      height="360"
+      width="640"
+    ></video>
+    <script type="text/javascript">
+      const NUM_READINGS = 10;
+      const VIDEO_WIDTH = 640;
+      const VIDEO_HEIGHT = 360;
+      let xPreviousAverages = new Array(NUM_READINGS).fill(VIDEO_WIDTH / 2);
+      let xRunningTotal = (VIDEO_WIDTH * NUM_READINGS) / 2;
+      let yPreviousAverages = new Array(NUM_READINGS).fill(VIDEO_HEIGHT / 2);
+      let yRunningTotal = (VIDEO_HEIGHT * NUM_READINGS) / 2;
+      let xMinAverages = new Array(NUM_READINGS).fill(0);
+      let xMinRunningTotal = 0;
+      let yMinAverages = new Array(NUM_READINGS).fill(0);
+      let yMinRunningTotal = 0;
+      let xMaxAverages = new Array(NUM_READINGS).fill(VIDEO_WIDTH);
+      let xMaxRunningTotal = VIDEO_WIDTH * NUM_READINGS;
+      let yMaxAverages = new Array(NUM_READINGS).fill(VIDEO_HEIGHT);
+      let yMaxRunningTotal = VIDEO_HEIGHT * NUM_READINGS;
+      let readIndex = 0;
+
+      function drawResults(canvas, poses, minPoseConfidence) {
+        const ctx = canvas.getContext("2d");
+        ctx.font =
+          'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"';
+        ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
+        let xTotal = 0;
+        let yTotal = 0;
+        let xMin = VIDEO_WIDTH;
+        let xMax = 0;
+        let yMin = VIDEO_HEIGHT;
+        let yMax = 0;
+        let validPoses = 0;
+        poses.forEach((pose) => {
+          if (pose.score >= minPoseConfidence) {
+            validPoses++;
+            const { minX, minY, maxX, maxY } = posenet.getBoundingBox(
+              pose.keypoints
+            );
+            const xCenter = minX + (maxX - minX) / 2;
+            const yCenter = minY + (maxY - minY) / 2;
+
+            xMin = Math.min(xMin, xCenter);
+            xMax = Math.max(xMax, xCenter);
+            yMin = Math.min(yMin, yCenter);
+            yMax = Math.max(yMax, yCenter);
+
+            xTotal += xCenter;
+            yTotal += yCenter;
+            ctx.beginPath();
+            ctx.arc(xCenter, yCenter, 4, 0, 2 * Math.PI);
+            ctx.strokeStyle = "white";
+            ctx.fillStyle = "white";
+            ctx.fill();
+          }
+        });
+
+        const xValid = xTotal / validPoses;
+        const yValid = yTotal / validPoses;
+
+        xRunningTotal -= xPreviousAverages[readIndex];
+        yRunningTotal -= yPreviousAverages[readIndex];
+        xMinRunningTotal -= xMinAverages[readIndex];
+        xMaxRunningTotal -= xMaxAverages[readIndex];
+        yMinRunningTotal -= yMinAverages[readIndex];
+        yMaxRunningTotal -= yMaxAverages[readIndex];
+
+        xPreviousAverages[readIndex] = xValid;
+        yPreviousAverages[readIndex] = yValid;
+        xMinAverages[readIndex] = xMin;
+        xMaxAverages[readIndex] = xMax;
+        yMinAverages[readIndex] = yMin;
+        yMaxAverages[readIndex] = yMax;
+
+        xRunningTotal += xPreviousAverages[readIndex];
+        yRunningTotal += yPreviousAverages[readIndex];
+        xMinRunningTotal += xMinAverages[readIndex];
+        xMaxRunningTotal += xMaxAverages[readIndex];
+        yMinRunningTotal += yMinAverages[readIndex];
+        yMaxRunningTotal += yMaxAverages[readIndex];
+
+        readIndex++;
+
+        if (readIndex >= NUM_READINGS) {
+          readIndex = 0;
+        }
+
+        const xAvg = xRunningTotal / NUM_READINGS;
+        const yAvg = yRunningTotal / NUM_READINGS;
+        const xMinAvg = xMinRunningTotal / NUM_READINGS;
+        const xMaxAvg = xMaxRunningTotal / NUM_READINGS;
+        const yMinAvg = yMinRunningTotal / NUM_READINGS;
+        const yMaxAvg = yMaxRunningTotal / NUM_READINGS;
+
+        const width = xMaxAvg - xMinAvg;
+        const height = yMaxAvg - yMinAvg;
+        ctx.beginPath();
+        ctx.rect(xMinAvg, yMinAvg, width, height);
+        ctx.strokeStyle = "red";
+        ctx.fillStyle = "red";
+        ctx.stroke();
+        const unityText = `${Math.round(width * height)} px²`;
+        const { width: unityTextWidth } = ctx.measureText(unityText);
+        ctx.fillText(unityText, xMinAvg + 10, yMinAvg + 24);
+
+        ctx.beginPath();
+        ctx.arc(xAvg, yAvg, 10, 0, 2 * Math.PI);
+        ctx.strokeStyle = "white";
+        ctx.fillStyle = "rebeccapurple";
+        ctx.lineWidth = 5;
+        ctx.stroke();
+        ctx.fill();
+        const text = `(${Math.round(xAvg)}, ${Math.round(yAvg)})`;
+        const { width: textWidth } = ctx.measureText(text);
+
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "#171717";
+        ctx.fillStyle = "white";
+        ctx.strokeText(text, xAvg - textWidth / 2, yAvg - 24);
+        ctx.fillText(text, xAvg - textWidth / 2, yAvg - 24);
+      }
+
+      const canvas = document.getElementById("canvas");
+      const video = document.getElementById("video");
+
+      posenet
+        .load({
+          architecture: "MobileNetV1",
+          outputStride: 16,
+          inputResolution: { width: 640, height: 360 },
+          multiplier: 0.75,
+        })
+        .then((net) => {
+          console.log("Net loaded");
+
+          video.addEventListener("play", () => {
+            setInterval(async () => {
+              const poses = await net.estimateMultiplePoses(video, {
+                maxDetections: 10,
+              });
+              drawResults(canvas, poses, 0.3);
+            }, 100);
+          });
+        });
+    </script>
+  </body>
+</html>

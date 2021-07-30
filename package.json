@@ -1,0 +1,16 @@
+{
+  "name": "smell-o-vision",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "snowpack dev",
+    "build": "snowpack build"
+  },
+  "keywords": [],
+  "author": "Vince Picone",
+  "license": "ISC",
+  "devDependencies": {
+    "snowpack": "^3.8.3"
+  }
+}
