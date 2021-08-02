@@ -5,16 +5,14 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/addons/p5.dom.min.js"></script>
+    <script src="sketch.js"></script>
   </head>
   <body>
-    <canvas
-      style="position: absolute; pointer-events: none"
-      id="canvas"
-      height="360"
-      width="640"
-    ></canvas>
     <video
       loop
       muted
@@ -24,6 +22,7 @@
       height="360"
       width="640"
     ></video>
+
     <script type="text/javascript">
       const NUM_READINGS = 10;
       const VIDEO_WIDTH = 640;
@@ -42,11 +41,7 @@
       let yMaxRunningTotal = VIDEO_HEIGHT * NUM_READINGS;
       let readIndex = 0;
 
-      function drawResults(canvas, poses, minPoseConfidence) {
-        const ctx = canvas.getContext("2d");
-        ctx.font =
-          'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"';
-        ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
+      function getResults(poses) {
         let xTotal = 0;
         let yTotal = 0;
         let xMin = VIDEO_WIDTH;
@@ -55,7 +50,7 @@
         let yMax = 0;
         let validPoses = 0;
         poses.forEach((pose) => {
-          if (pose.score >= minPoseConfidence) {
+          if (pose.score >= 0.3) {
             validPoses++;
             const { minX, minY, maxX, maxY } = posenet.getBoundingBox(
               pose.keypoints
@@ -70,11 +65,6 @@
 
             xTotal += xCenter;
             yTotal += yCenter;
-            ctx.beginPath();
-            ctx.arc(xCenter, yCenter, 4, 0, 2 * Math.PI);
-            ctx.strokeStyle = "white";
-            ctx.fillStyle = "white";
-            ctx.fill();
           }
         });
 
@@ -117,33 +107,12 @@
 
         const width = xMaxAvg - xMinAvg;
         const height = yMaxAvg - yMinAvg;
-        ctx.beginPath();
-        ctx.rect(xMinAvg, yMinAvg, width, height);
-        ctx.strokeStyle = "red";
-        ctx.fillStyle = "red";
-        ctx.stroke();
-        const unityText = `${Math.round(width * height)} px²`;
-        const { width: unityTextWidth } = ctx.measureText(unityText);
-        ctx.fillText(unityText, xMinAvg + 10, yMinAvg + 24);
-
-        ctx.beginPath();
-        ctx.arc(xAvg, yAvg, 10, 0, 2 * Math.PI);
-        ctx.strokeStyle = "white";
-        ctx.fillStyle = "rebeccapurple";
-        ctx.lineWidth = 5;
-        ctx.stroke();
-        ctx.fill();
-        const text = `(${Math.round(xAvg)}, ${Math.round(yAvg)})`;
-        const { width: textWidth } = ctx.measureText(text);
-
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = "#171717";
-        ctx.fillStyle = "white";
-        ctx.strokeText(text, xAvg - textWidth / 2, yAvg - 24);
-        ctx.fillText(text, xAvg - textWidth / 2, yAvg - 24);
+        window.unity = width * height;
+        window.xAvg = Math.round(xAvg);
+        window.yAvg = Math.round(yAvg);
+        window.peopleCount = validPoses;
       }
 
-      const canvas = document.getElementById("canvas");
       const video = document.getElementById("video");
 
       posenet
@@ -161,7 +130,7 @@
               const poses = await net.estimateMultiplePoses(video, {
                 maxDetections: 10,
               });
-              drawResults(canvas, poses, 0.3);
+              getResults(poses);
             }, 100);
           });
         });
