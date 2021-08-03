@@ -39,6 +39,8 @@
       let xMaxRunningTotal = VIDEO_WIDTH * NUM_READINGS;
       let yMaxAverages = new Array(NUM_READINGS).fill(VIDEO_HEIGHT);
       let yMaxRunningTotal = VIDEO_HEIGHT * NUM_READINGS;
+      let unityTotal = 0;
+      let unityScores = new Array(NUM_READINGS).fill(0);
       let readIndex = 0;
 
       function getResults(poses) {
@@ -77,6 +79,7 @@
         xMaxRunningTotal -= xMaxAverages[readIndex];
         yMinRunningTotal -= yMinAverages[readIndex];
         yMaxRunningTotal -= yMaxAverages[readIndex];
+        unityTotal -= unityScores[readIndex];
 
         xPreviousAverages[readIndex] = xValid;
         yPreviousAverages[readIndex] = yValid;
@@ -92,12 +95,6 @@
         yMinRunningTotal += yMinAverages[readIndex];
         yMaxRunningTotal += yMaxAverages[readIndex];
 
-        readIndex++;
-
-        if (readIndex >= NUM_READINGS) {
-          readIndex = 0;
-        }
-
         const xAvg = xRunningTotal / NUM_READINGS;
         const yAvg = yRunningTotal / NUM_READINGS;
         const xMinAvg = xMinRunningTotal / NUM_READINGS;
@@ -107,8 +104,18 @@
 
         const width = xMaxAvg - xMinAvg;
         const height = yMaxAvg - yMinAvg;
+
+        unityScores[readIndex] = 1 - (width * height) / 203400;
+        unityTotal += unityScores[readIndex];
+
+        readIndex++;
+
+        if (readIndex >= NUM_READINGS) {
+          readIndex = 0;
+        }
         // (1 - unity / 230400)
-        window.unity = 1 - (width * height) / 230400;
+        window.unity = unityTotal / NUM_READINGS;
+        // window.unity = 1 - (width * height) / 203400;
         window.xAvg = Math.round(xAvg);
         window.yAvg = Math.round(yAvg);
         window.peopleCount = validPoses;

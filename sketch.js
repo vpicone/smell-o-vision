@@ -2,7 +2,6 @@ class Blob {
   constructor(x, y) {
     this.pos = createVector(x, y);
     this.velocity = p5.Vector.random2D().mult(random(5, 10));
-    console.log(this.velocity);
     this.r = random(20, 40);
   }
 
@@ -27,7 +26,7 @@ class Blob {
 let blobs = [];
 
 function setup() {
-    colorMode(HSB);
+  
   blob1 = new Blob(random(0,640), random(random(0,360)));
   blob2 = new Blob(random(0,640), random(random(0,360)));
   blob3 = new Blob(random(0,640), random(random(0,360)));
@@ -48,9 +47,10 @@ function draw() {
       let sum = 0;
       blobs.forEach(blob => {
           const distance = dist(x, y, blob.pos.x, blob.pos.y);
-          sum += 1000 * blob.r * unity / distance;
+          sum += 250 * blob.r * unity / distance;
       })
-      set(x, y, color(sum, 255, 255));
+      colorMode(RGB, x ^ y + 220);
+      set(x, y, color(sum, 150, 100));
     }
   }
   updatePixels();
