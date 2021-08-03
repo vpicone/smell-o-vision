@@ -60,7 +60,7 @@ function draw() {
     // blob.show();
   });
 
-  fill("red");
+  fill("white");
   text(`framerate: ${frameRate().toFixed(2)}`, 10, 320);
 
   if (unity) {
