@@ -107,7 +107,8 @@
 
         const width = xMaxAvg - xMinAvg;
         const height = yMaxAvg - yMinAvg;
-        window.unity = width * height;
+        // (1 - unity / 230400)
+        window.unity = 1 - (width * height) / 230400;
         window.xAvg = Math.round(xAvg);
         window.yAvg = Math.round(yAvg);
         window.peopleCount = validPoses;

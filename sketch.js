@@ -2,8 +2,8 @@ class Blob {
   constructor(x, y) {
     this.pos = createVector(x, y);
     this.velocity = p5.Vector.random2D().mult(random(5, 10));
-    console.log(this.velocity)
-    this.r = random(20,40);
+    console.log(this.velocity);
+    this.r = random(20, 40);
   }
 
   show = () => {
@@ -15,20 +15,23 @@ class Blob {
 
   update = () => {
     if (this.pos.x > width || this.pos.x < 0) {
-      this.velocity.x = this.velocity.x * -1;
+      this.velocity.x *= -1;
     }
     if (this.pos.y > height || this.pos.y < 0) {
-        this.velocity.y = this.velocity.y * -1;
+      this.velocity.y *= -1;
     }
     this.pos.add(this.velocity);
   };
 }
 
-let blob;
-let d;
+let blobs = [];
 
 function setup() {
-  blob = new Blob(100, 100);
+    colorMode(HSB);
+  blob1 = new Blob(random(0,640), random(random(0,360)));
+  blob2 = new Blob(random(0,640), random(random(0,360)));
+  blob3 = new Blob(random(0,640), random(random(0,360)));
+  blobs = [blob1, blob2, blob3];
   createCanvas(640, 360);
   fill(0, 102, 153);
   textSize(32);
@@ -42,23 +45,28 @@ function draw() {
   loadPixels();
   for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
-      const distance = dist(x, y, blob.pos.x, blob.pos.y);
-      const col = color((1000 * blob.r) / distance);
-      set(x, y, col);
+      let sum = 0;
+      blobs.forEach(blob => {
+          const distance = dist(x, y, blob.pos.x, blob.pos.y);
+          sum += 1000 * blob.r * unity / distance;
+      })
+      set(x, y, color(sum, 255, 255));
     }
   }
   updatePixels();
 
-  blob.update();
-  blob.show();
+  blobs.forEach((blob) => {
+    blob.update();
+    // blob.show();
+  });
 
-  fill('red');
-  text(`framerate: ${frameRate().toFixed(2)}`,10,320);
+  fill("red");
+  text(`framerate: ${frameRate().toFixed(2)}`, 10, 320);
 
-  if(unity){
-      text(`unity: ${(1 - (unity / 230400)).toFixed(2)}`, 10, 30);
-      text(`xAvg: ${xAvg}`, 10, 60);
-      text(`yAvg: ${yAvg}`, 10, 90);
-      text(`people: ${peopleCount}`, 10, 120);
+  if (unity) {
+    text(`unity: ${unity.toFixed(2)}`, 10, 30);
+    text(`xAvg: ${xAvg}`, 10, 60);
+    text(`yAvg: ${yAvg}`, 10, 90);
+    text(`people: ${peopleCount}`, 10, 120);
   }
 }
