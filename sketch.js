@@ -26,12 +26,12 @@ class Blob {
 let blobs = [];
 
 function setup() {
-  
-  blob1 = new Blob(random(0,640), random(random(0,360)));
-  blob2 = new Blob(random(0,640), random(random(0,360)));
-  blob3 = new Blob(random(0,640), random(random(0,360)));
+  colorMode(HSL);
+  createCanvas(windowWidth/2, windowHeight/2);
+  blob1 = new Blob(random(0,width), random(random(0,height)));
+  blob2 = new Blob(random(0,width), random(random(0,height)));
+  blob3 = new Blob(random(0,width), random(random(0,height)));
   blobs = [blob1, blob2, blob3];
-  createCanvas(640, 360);
   fill(0, 102, 153);
   textSize(32);
   pixelDensity(1);
@@ -47,10 +47,9 @@ function draw() {
       let sum = 0;
       blobs.forEach(blob => {
           const distance = dist(x, y, blob.pos.x, blob.pos.y);
-          sum += 250 * blob.r * unity / distance;
+          sum += 2000 * blob.r / distance;
       })
-      colorMode(RGB, x ^ y + 220);
-      set(x, y, color(sum, 150, 100));
+      set(x, y, color(sum % 360 - 200));
     }
   }
   updatePixels();
