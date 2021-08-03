@@ -134,6 +134,14 @@
               getResults(poses);
             }, 100);
           });
+
+          if (video.readyState === 4) {
+            video.play();
+          } else {
+            video.addEventListener("loadeddata", () => {
+              video.play();
+            });
+          }
         });
     </script>
   </body>
