@@ -24,7 +24,7 @@
     ></video>
 
     <script type="text/javascript">
-      const NUM_READINGS = 10;
+      const NUM_READINGS = 5;
       const VIDEO_WIDTH = 640;
       const VIDEO_HEIGHT = 360;
       let xPreviousAverages = new Array(NUM_READINGS).fill(VIDEO_WIDTH / 2);
@@ -105,7 +105,7 @@
         const width = xMaxAvg - xMinAvg;
         const height = yMaxAvg - yMinAvg;
 
-        unityScores[readIndex] = 1 - (width * height) / 203400;
+        unityScores[readIndex] = 1 - (width * height) / 230400;
         unityTotal += unityScores[readIndex];
 
         readIndex++;

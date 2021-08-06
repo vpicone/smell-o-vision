@@ -28,7 +28,7 @@ class Blob {
       if (this.r > 0) {
         this.r -= 1;
       }
-      if (this.r <= 0) {
+      if (this.r === 0) {
         clearInterval(shrink);
       }
     }, 100);
@@ -51,7 +51,6 @@ function setup() {
   colorMode(HSL);
   createCanvas(640, 360);
   blobs = [
-    new Blob(),
     new Blob(),
     new Blob(),
     new Blob(),
@@ -84,7 +83,6 @@ function draw() {
 
   blobs.forEach((blob, i) => {
     blob.update();
-    blob.debug();
     if (i < window.peopleCount) {
       blob.show();
     } else {
