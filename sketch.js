@@ -10,10 +10,10 @@ class Blob {
       if (this.r < 20) {
         this.r += 1;
       }
-      if (this.r === 20) {
+      if (this.r >= 20) {
         clearInterval(grow);
       }
-    }, 50);
+    }, 100);
   };
 
   debug = () => {
@@ -31,7 +31,7 @@ class Blob {
       if (this.r <= 0) {
         clearInterval(shrink);
       }
-    }, 50);
+    }, 100);
   };
 
   update = () => {
@@ -75,9 +75,12 @@ function draw() {
       let sum = 0;
       blobs.forEach((blob) => {
         const distance = dist(x, y, blob.pos.x, blob.pos.y);
-        sum += (100 * blob.r) / distance;
+        sum += (200 * blob.r) / distance;
       });
-      set(x, y, color(sum, 50, 50));
+      if (x === 320 && y === 180) {
+        window.sum = sum;
+      }
+      set(x, y, color(map(sum, 0, 100, 90, 180), 70, 50));
     }
   }
   updatePixels();
@@ -99,5 +102,6 @@ function draw() {
     text(`xAvg: ${xAvg}`, 10, 60);
     text(`yAvg: ${yAvg}`, 10, 90);
     text(`people: ${peopleCount}`, 10, 120);
+    text(`sum: ${window.sum}`, 10, 150);
   }
 }
