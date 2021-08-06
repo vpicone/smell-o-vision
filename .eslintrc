@@ -1,0 +1,13 @@
+{
+  "plugins": ["p5js"],
+  "extends": ["eslint:recommended", "plugin:p5js/p5"],
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "p5js/p5": true
+  },
+  "globals": {
+    "p5": "readonly"
+  },
+  "parser": "babel-eslint"
+}
