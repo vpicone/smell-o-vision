@@ -77,9 +77,6 @@ function draw() {
         const distance = dist(x, y, blob.pos.x, blob.pos.y);
         sum += (200 * blob.r) / distance;
       });
-      if (x === 320 && y === 180) {
-        window.sum = sum;
-      }
       set(x, y, color(map(sum, 0, 100, 90, 180), 70, 50));
     }
   }
@@ -102,6 +99,5 @@ function draw() {
     text(`xAvg: ${xAvg}`, 10, 60);
     text(`yAvg: ${yAvg}`, 10, 90);
     text(`people: ${peopleCount}`, 10, 120);
-    text(`sum: ${window.sum}`, 10, 150);
   }
 }
