@@ -1,16 +1,16 @@
 class Blob {
   constructor(x, y) {
     this.pos = createVector(random(width), random(height));
-    this.velocity = p5.Vector.random2D().mult(random(5, 10));
+    this.velocity = p5.Vector.random2D().mult(random(2, 5));
     this.r = 0;
   }
 
   show = () => {
     const grow = setInterval(() => {
-      if (this.r < 20) {
+      if (this.r < 30) {
         this.r += 1;
       }
-      if (this.r >= 20) {
+      if (this.r >= 30) {
         clearInterval(grow);
       }
     }, 100);
@@ -48,20 +48,12 @@ class Blob {
 let blobs = [];
 
 function setup() {
-  colorMode(HSL);
-  createCanvas(640, 360);
-  blobs = [
-    new Blob(),
-    new Blob(),
-    new Blob(),
-    new Blob(),
-    new Blob(),
-    new Blob(),
-    new Blob(),
-    new Blob(),
-  ];
+  colorMode(HSB);
+  createCanvas(240, 135);
+  blobs = [new Blob(), new Blob(), new Blob()];
   fill(0, 102, 153);
-  textSize(32);
+  frameRate(15);
+  textSize(15);
 }
 
 function draw() {
@@ -76,26 +68,27 @@ function draw() {
         const distance = dist(x, y, blob.pos.x, blob.pos.y);
         sum += (200 * blob.r) / distance;
       });
-      set(x, y, color(map(sum, 0, 100, 90, 180), 70, 50));
+      set(x, y, color(sum, 70, 100));
     }
   }
   updatePixels();
 
   blobs.forEach((blob, i) => {
     blob.update();
-    if (i < window.peopleCount) {
-      blob.show();
-    } else {
-      blob.hide();
+    if (i < window.peopleCount && blob.r < 30) {
+      blob.r++;
+    }
+    if (i >= window.peopleCount && blob.r > 0) {
+      blob.r--;
     }
   });
 
   fill("white");
-  text(`framerate: ${frameRate().toFixed(2)}`, 10, 320);
   if (unity) {
     text(`unity: ${unity.toFixed(2)}`, 10, 30);
-    text(`xAvg: ${xAvg}`, 10, 60);
-    text(`yAvg: ${yAvg}`, 10, 90);
-    text(`people: ${peopleCount}`, 10, 120);
+    text(`xAvg: ${xAvg}`, 10, 40);
+    text(`yAvg: ${yAvg}`, 10, 50);
+    text(`people: ${peopleCount}`, 10, 60);
+    text(`framerate: ${frameRate().toFixed(2)}`, 10, 70);
   }
 }

@@ -2,7 +2,22 @@ main {
   position: relative;
 }
 canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  filter: blur(2px);
 }
 
 video {
+  position: absolute;
+  visibility: visible;
+  opacity: 0.3;
+  width: 400px;
+  object-fit: fill;
+  height: 300px;
+  top: 0;
+  right: 0;
+  z-index: 1;
 }

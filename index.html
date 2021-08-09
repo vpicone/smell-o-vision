@@ -6,27 +6,19 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" type="text/css" href="styles.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+    <script src="https://unpkg.com/@tensorflow/tfjs@3.8.0/dist/tf.min.js"></script>
+    <script src="https://unpkg.com/@tensorflow-models/posenet@2.2.2/dist/posenet.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.3/addons/p5.dom.min.js"></script>
     <script src="sketch.js"></script>
   </head>
   <body>
-    <video
-      loop
-      muted
-      controls
-      src="crowd.mp4"
-      id="video"
-      height="360"
-      width="640"
-    ></video>
+    <video loop muted controls id="video" height="300" width="400"></video>
 
     <script type="text/javascript">
       const NUM_READINGS = 5;
-      const VIDEO_WIDTH = 640;
-      const VIDEO_HEIGHT = 360;
+      const VIDEO_WIDTH = 400;
+      const VIDEO_HEIGHT = 300;
       let xPreviousAverages = new Array(NUM_READINGS).fill(VIDEO_WIDTH / 2);
       let xRunningTotal = (VIDEO_WIDTH * NUM_READINGS) / 2;
       let yPreviousAverages = new Array(NUM_READINGS).fill(VIDEO_HEIGHT / 2);
@@ -121,27 +113,54 @@
         window.peopleCount = validPoses;
       }
 
+      async function setupCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error(
+            "Browser API navigator.mediaDevices.getUserMedia not available"
+          );
+        }
+
+        const video = document.getElementById("video");
+        video.width = VIDEO_WIDTH;
+        video.height = VIDEO_HEIGHT;
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: VIDEO_WIDTH,
+            height: VIDEO_HEIGHT,
+          },
+        });
+        video.srcObject = stream;
+
+        return new Promise((resolve) => {
+          video.onloadedmetadata = () => {
+            resolve(video);
+          };
+        });
+      }
+
       const video = document.getElementById("video");
 
       posenet
         .load({
           architecture: "MobileNetV1",
           outputStride: 16,
-          inputResolution: { width: 640, height: 360 },
-          multiplier: 0.75,
+          inputResolution: { width: VIDEO_WIDTH, height: VIDEO_HEIGHT },
+          multiplier: 0.5,
         })
         .then((net) => {
           console.log("Net loaded");
-
+          setupCamera();
           video.addEventListener("play", () => {
             setInterval(async () => {
               const poses = await net.estimateMultiplePoses(video, {
                 maxDetections: 10,
               });
-              getResults(poses);
-            }, 100);
+              requestAnimationFrame(() => {
+                getResults(poses);
+              });
+            }, 500);
           });
-
           if (video.readyState === 4) {
             video.play();
           } else {
