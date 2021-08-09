@@ -68,9 +68,17 @@ function draw() {
         sum += (200 * blob.r) / distance;
       });
       if (window.xAvg < 200) {
-        set(x, y, color(Math.max(sum, 100), 0, 0));
+        if (window.yAvg > 200) {
+          set(x, y, color(Math.max(sum, 100), 0, 0));
+        } else {
+          set(x, y, color(Math.max(sum, 100), Math.max(sum, 100), 0));
+        }
       } else {
-        set(x, y, color(Math.max(sum, 100), Math.max(sum, 100), 0));
+        if (window.yAvg > 200) {
+          set(x, y, color(0, 0, Math.max(sum, 100)));
+        } else {
+          set(x, y, color(0, Math.max(sum, 100), Math.max(sum, 100)));
+        }
       }
     }
   }
