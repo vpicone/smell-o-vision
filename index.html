@@ -44,7 +44,7 @@
         let yMax = 0;
         let validPoses = 0;
         poses.forEach((pose) => {
-          if (pose.score >= 0.3) {
+          if (pose.score >= 0.2) {
             validPoses++;
             const { minX, minY, maxX, maxY } = posenet.getBoundingBox(
               pose.keypoints
@@ -62,54 +62,57 @@
           }
         });
 
-        const xValid = xTotal / validPoses;
-        const yValid = yTotal / validPoses;
+        if (validPoses) {
+          const xValid = xTotal / validPoses;
+          const yValid = yTotal / validPoses;
 
-        xRunningTotal -= xPreviousAverages[readIndex];
-        yRunningTotal -= yPreviousAverages[readIndex];
-        xMinRunningTotal -= xMinAverages[readIndex];
-        xMaxRunningTotal -= xMaxAverages[readIndex];
-        yMinRunningTotal -= yMinAverages[readIndex];
-        yMaxRunningTotal -= yMaxAverages[readIndex];
-        unityTotal -= unityScores[readIndex];
+          xRunningTotal -= xPreviousAverages[readIndex];
+          yRunningTotal -= yPreviousAverages[readIndex];
+          xMinRunningTotal -= xMinAverages[readIndex];
+          xMaxRunningTotal -= xMaxAverages[readIndex];
+          yMinRunningTotal -= yMinAverages[readIndex];
+          yMaxRunningTotal -= yMaxAverages[readIndex];
+          unityTotal -= unityScores[readIndex];
 
-        xPreviousAverages[readIndex] = xValid;
-        yPreviousAverages[readIndex] = yValid;
-        xMinAverages[readIndex] = xMin;
-        xMaxAverages[readIndex] = xMax;
-        yMinAverages[readIndex] = yMin;
-        yMaxAverages[readIndex] = yMax;
+          xPreviousAverages[readIndex] = xValid;
+          yPreviousAverages[readIndex] = yValid;
+          xMinAverages[readIndex] = xMin;
+          xMaxAverages[readIndex] = xMax;
+          yMinAverages[readIndex] = yMin;
+          yMaxAverages[readIndex] = yMax;
 
-        xRunningTotal += xPreviousAverages[readIndex];
-        yRunningTotal += yPreviousAverages[readIndex];
-        xMinRunningTotal += xMinAverages[readIndex];
-        xMaxRunningTotal += xMaxAverages[readIndex];
-        yMinRunningTotal += yMinAverages[readIndex];
-        yMaxRunningTotal += yMaxAverages[readIndex];
+          xRunningTotal += xPreviousAverages[readIndex];
+          yRunningTotal += yPreviousAverages[readIndex];
+          xMinRunningTotal += xMinAverages[readIndex];
+          xMaxRunningTotal += xMaxAverages[readIndex];
+          yMinRunningTotal += yMinAverages[readIndex];
+          yMaxRunningTotal += yMaxAverages[readIndex];
 
-        const xAvg = xRunningTotal / NUM_READINGS;
-        const yAvg = yRunningTotal / NUM_READINGS;
-        const xMinAvg = xMinRunningTotal / NUM_READINGS;
-        const xMaxAvg = xMaxRunningTotal / NUM_READINGS;
-        const yMinAvg = yMinRunningTotal / NUM_READINGS;
-        const yMaxAvg = yMaxRunningTotal / NUM_READINGS;
+          const xAvg = xRunningTotal / NUM_READINGS;
+          const yAvg = yRunningTotal / NUM_READINGS;
+          const xMinAvg = xMinRunningTotal / NUM_READINGS;
+          const xMaxAvg = xMaxRunningTotal / NUM_READINGS;
+          const yMinAvg = yMinRunningTotal / NUM_READINGS;
+          const yMaxAvg = yMaxRunningTotal / NUM_READINGS;
 
-        const width = xMaxAvg - xMinAvg;
-        const height = yMaxAvg - yMinAvg;
+          const width = xMaxAvg - xMinAvg;
+          const height = yMaxAvg - yMinAvg;
 
-        unityScores[readIndex] = 1 - (width * height) / 230400;
-        unityTotal += unityScores[readIndex];
+          unityScores[readIndex] = 1 - (width * height) / 230400;
+          unityTotal += unityScores[readIndex];
 
-        readIndex++;
+          readIndex++;
 
-        if (readIndex >= NUM_READINGS) {
-          readIndex = 0;
+          if (readIndex >= NUM_READINGS) {
+            readIndex = 0;
+          }
+
+          // (1 - unity / 230400)
+          window.unity = unityTotal / NUM_READINGS;
+          // window.unity = 1 - (width * height) / 203400;
+          window.xAvg = Math.round(xAvg);
+          window.yAvg = Math.round(yAvg);
         }
-        // (1 - unity / 230400)
-        window.unity = unityTotal / NUM_READINGS;
-        // window.unity = 1 - (width * height) / 203400;
-        window.xAvg = Math.round(xAvg);
-        window.yAvg = Math.round(yAvg);
         window.peopleCount = validPoses;
       }
 

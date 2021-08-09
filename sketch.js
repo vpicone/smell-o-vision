@@ -48,7 +48,6 @@ class Blob {
 let blobs = [];
 
 function setup() {
-  colorMode(HSB);
   createCanvas(240, 135);
   blobs = [new Blob(), new Blob(), new Blob()];
   fill(0, 102, 153);
@@ -68,7 +67,11 @@ function draw() {
         const distance = dist(x, y, blob.pos.x, blob.pos.y);
         sum += (200 * blob.r) / distance;
       });
-      set(x, y, color(sum, 70, 100));
+      if (window.xAvg < 200) {
+        set(x, y, color(Math.max(sum, 100), 0, 0));
+      } else {
+        set(x, y, color(Math.max(sum, 100), Math.max(sum, 100), 0));
+      }
     }
   }
   updatePixels();
