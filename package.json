@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "snowpack dev",
+    "start:browser": "snowpack dev --polyfill-node",
+    "start:serial": "node serial.mjs",
+    "start": "run-p start:browser start:serial",
     "build": "snowpack build"
   },
   "keywords": [],
@@ -15,6 +17,11 @@
     "eslint": "^7.32.0",
     "eslint-config-p5js": "^1.1.0",
     "eslint-plugin-p5js": "^0.3.2",
+    "npm-run-all": "^4.1.5",
     "snowpack": "^3.8.3"
+  },
+  "dependencies": {
+    "@serialport/parser-readline": "^9.0.7",
+    "serialport": "^9.2.0"
   }
 }

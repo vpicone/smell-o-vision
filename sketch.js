@@ -1,3 +1,10 @@
+let socket = new WebSocket("ws://localhost:8081");
+
+const RED_PIN = 2;
+const YELLOW_PIN = 3;
+const GREEN_PIN = 4;
+const BLUE_PIN = 5;
+
 class Blob {
   constructor(x, y) {
     this.pos = createVector(random(width), random(height));
@@ -55,10 +62,17 @@ function setup() {
   textSize(15);
 }
 
+const setColor = (activeQuadrant) => {
+  if (window.activeQuadrant !== activeQuadrant) {
+    console.log(activeQuadrant);
+    socket.send(activeQuadrant);
+    window.activeQuadrant = activeQuadrant;
+  }
+};
+
 function draw() {
   const { unity, xAvg, yAvg, peopleCount } = window;
   clear();
-
   loadPixels();
   for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
@@ -69,15 +83,19 @@ function draw() {
       });
       if (window.xAvg < 200) {
         if (window.yAvg > 200) {
+          setColor(RED_PIN);
           set(x, y, color(Math.max(sum, 100), 0, 0));
         } else {
+          setColor(YELLOW_PIN);
           set(x, y, color(Math.max(sum, 100), Math.max(sum, 100), 0));
         }
       } else {
         if (window.yAvg > 200) {
+          setColor(BLUE_PIN);
           set(x, y, color(0, 0, Math.max(sum, 100)));
         } else {
-          set(x, y, color(0, Math.max(sum, 100), Math.max(sum, 100)));
+          setColor(GREEN_PIN);
+          set(x, y, color(0, Math.max(sum, 100), 0));
         }
       }
     }
@@ -95,6 +113,7 @@ function draw() {
   });
 
   fill("white");
+
   if (unity) {
     text(`unity: ${unity.toFixed(2)}`, 10, 30);
     text(`xAvg: ${xAvg}`, 10, 40);
