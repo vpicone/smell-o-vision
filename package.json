@@ -7,7 +7,7 @@
     "start:browser": "snowpack dev --polyfill-node",
     "start:serial": "node serial.mjs",
     "start": "run-p start:browser start:serial",
-    "build": "snowpack build"
+    "build": "snowpack build --polyfill-node"
   },
   "keywords": [],
   "author": "Vince Picone",

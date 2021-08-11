@@ -6,39 +6,17 @@ const GREEN_PIN = 4;
 const BLUE_PIN = 5;
 
 class Blob {
-  constructor(x, y) {
+  constructor() {
     this.pos = createVector(random(width), random(height));
-    this.velocity = p5.Vector.random2D().mult(random(2, 5));
+    this.velocity = p5.Vector.random2D().mult(random(1, 3));
     this.r = 0;
   }
-
-  show = () => {
-    const grow = setInterval(() => {
-      if (this.r < 30) {
-        this.r += 1;
-      }
-      if (this.r >= 30) {
-        clearInterval(grow);
-      }
-    }, 100);
-  };
 
   debug = () => {
     noFill();
     stroke(0);
     strokeWeight(4);
     ellipse(this.pos.x, this.pos.y, this.r * 2, this.r * 2);
-  };
-
-  hide = () => {
-    const shrink = setInterval(() => {
-      if (this.r > 0) {
-        this.r -= 1;
-      }
-      if (this.r === 0) {
-        clearInterval(shrink);
-      }
-    }, 100);
   };
 
   update = () => {
@@ -58,8 +36,8 @@ function setup() {
   createCanvas(240, 135);
   blobs = [new Blob(), new Blob(), new Blob()];
   fill(0, 102, 153);
-  frameRate(15);
-  textSize(15);
+  frameRate(24);
+  textSize(10);
 }
 
 const setColor = (activeQuadrant) => {
@@ -73,6 +51,8 @@ const setColor = (activeQuadrant) => {
 function draw() {
   const { unity, xAvg, yAvg, peopleCount } = window;
   clear();
+
+  // Load pixels for individual manipulation
   loadPixels();
   for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
@@ -103,7 +83,10 @@ function draw() {
   updatePixels();
 
   blobs.forEach((blob, i) => {
+    // Moves the blobs
     blob.update();
+
+    // Fades blobs in and out
     if (i < window.peopleCount && blob.r < 30) {
       blob.r++;
     }
@@ -111,6 +94,15 @@ function draw() {
       blob.r--;
     }
   });
+
+  // Debug helpers
+  const video = document.getElementById("video");
+  video.style.visibility = "visible";
+  strokeWeight(1);
+  stroke("white");
+  line(width - 36.5, 0, width - 36.5, 47);
+  line(width - 73, 22.5, width, 22.5);
+  ellipse(window.xAvg, window.yAvg, 10);
 
   fill("white");
 
