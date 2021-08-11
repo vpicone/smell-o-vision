@@ -16,6 +16,14 @@
     <video loop muted controls id="video" height="300" width="400"></video>
 
     <script type="text/javascript">
+      // Shows canvas elements for debugging
+      window.debug = false;
+      document.addEventListener("keydown", (e) => {
+        if (e.keyCode === 68) {
+          window.debug = !window.debug;
+        }
+      });
+
       const NUM_READINGS = 5;
       const VIDEO_WIDTH = 400;
       const VIDEO_HEIGHT = 300;

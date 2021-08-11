@@ -20,4 +20,6 @@ video {
   top: 0;
   right: 0;
   z-index: 1;
+  width: 100vw !important;
+  height: 100vh !important;
 }

@@ -96,21 +96,25 @@ function draw() {
   });
 
   // Debug helpers
-  const video = document.getElementById("video");
-  video.style.visibility = "visible";
-  strokeWeight(1);
-  stroke("white");
-  line(width - 36.5, 0, width - 36.5, 47);
-  line(width - 73, 22.5, width, 22.5);
-  ellipse(window.xAvg, window.yAvg, 10);
+  if (window.debug) {
+    const video = document.getElementById("video");
+    video.style.visibility = "visible";
+    strokeWeight(1);
+    stroke("white");
+    line(0, height / 2, width, height / 2);
+    line(width / 2, 0, width / 2, height);
+    ellipse(window.xAvg, window.yAvg, 10);
 
-  fill("white");
+    fill("white");
 
-  if (unity) {
-    text(`unity: ${unity.toFixed(2)}`, 10, 30);
-    text(`xAvg: ${xAvg}`, 10, 40);
-    text(`yAvg: ${yAvg}`, 10, 50);
-    text(`people: ${peopleCount}`, 10, 60);
-    text(`framerate: ${frameRate().toFixed(2)}`, 10, 70);
+    // ellipse(xAvg, yAvg, 10);
+
+    if (unity) {
+      text(`unity: ${unity.toFixed(2)}`, 10, 10);
+      text(`xAvg: ${xAvg}`, 10, 20);
+      text(`yAvg: ${yAvg}`, 10, 30);
+      text(`people: ${peopleCount}`, 10, 40);
+      text(`framerate: ${frameRate().toFixed(2)}`, 10, 50);
+    }
   }
 }
