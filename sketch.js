@@ -33,7 +33,7 @@ class Blob {
 let blobs = [];
 
 function setup() {
-  createCanvas(240, 135);
+  createCanvas(300, 167);
   blobs = [new Blob(), new Blob(), new Blob()];
   fill(0, 102, 153);
   frameRate(24);
@@ -52,7 +52,7 @@ function draw() {
   const { unity, xAvg, yAvg, peopleCount } = window;
   clear();
 
-  // Load pixels for individual manipulation
+  //   Load pixels for individual manipulation
   loadPixels();
   for (let x = 0; x < width; x++) {
     for (let y = 0; y < height; y++) {
@@ -103,7 +103,9 @@ function draw() {
     stroke("white");
     line(0, height / 2, width, height / 2);
     line(width / 2, 0, width / 2, height);
-    ellipse(window.xAvg, window.yAvg, 10);
+    fill("red");
+    // 240 135
+    ellipse(window.xAvg, window.yAvg, 20);
 
     fill("white");
 
@@ -113,6 +115,8 @@ function draw() {
       text(`unity: ${unity.toFixed(2)}`, 10, 10);
       text(`xAvg: ${xAvg}`, 10, 20);
       text(`yAvg: ${yAvg}`, 10, 30);
+      text(`width: ${map(window.xAvg, 0, width, 0, 240)}`, 100, 30);
+      text(`height: ${map(window.yAvg, 0, height, 0, 135)}`, 100, 40);
       text(`people: ${peopleCount}`, 10, 40);
       text(`framerate: ${frameRate().toFixed(2)}`, 10, 50);
     }

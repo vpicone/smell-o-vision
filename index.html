@@ -13,7 +13,7 @@
     <script src="sketch.js"></script>
   </head>
   <body>
-    <video loop muted controls id="video" height="300" width="400"></video>
+    <video loop muted controls id="video" height="167" width="300"></video>
 
     <script type="text/javascript">
       // Shows canvas elements for debugging
@@ -25,8 +25,9 @@
       });
 
       const NUM_READINGS = 5;
-      const VIDEO_WIDTH = 400;
-      const VIDEO_HEIGHT = 300;
+      //   logitech stream cam
+      const VIDEO_WIDTH = 300;
+      const VIDEO_HEIGHT = 167;
       let xPreviousAverages = new Array(NUM_READINGS).fill(VIDEO_WIDTH / 2);
       let xRunningTotal = (VIDEO_WIDTH * NUM_READINGS) / 2;
       let yPreviousAverages = new Array(NUM_READINGS).fill(VIDEO_HEIGHT / 2);
@@ -157,10 +158,9 @@
           architecture: "MobileNetV1",
           outputStride: 16,
           inputResolution: { width: VIDEO_WIDTH, height: VIDEO_HEIGHT },
-          multiplier: 0.5,
+          multiplier: 0.75,
         })
         .then((net) => {
-          console.log("Net loaded");
           setupCamera();
           video.addEventListener("play", () => {
             setInterval(async () => {
