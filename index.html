@@ -13,11 +13,11 @@
     <script src="sketch.js"></script>
   </head>
   <body>
-    <video loop muted controls id="video" height="167" width="300"></video>
+    <video loop muted controls id="video" height="450" width="800"></video>
 
     <script type="text/javascript">
       // Shows canvas elements for debugging
-      window.debug = false;
+      window.debug = true;
       document.addEventListener("keydown", (e) => {
         if (e.keyCode === 68) {
           window.debug = !window.debug;
@@ -26,8 +26,8 @@
 
       const NUM_READINGS = 5;
       //   logitech stream cam
-      const VIDEO_WIDTH = 300;
-      const VIDEO_HEIGHT = 167;
+      const VIDEO_WIDTH = 800;
+      const VIDEO_HEIGHT = 450;
       let xPreviousAverages = new Array(NUM_READINGS).fill(VIDEO_WIDTH / 2);
       let xRunningTotal = (VIDEO_WIDTH * NUM_READINGS) / 2;
       let yPreviousAverages = new Array(NUM_READINGS).fill(VIDEO_HEIGHT / 2);
@@ -44,7 +44,7 @@
       let unityScores = new Array(NUM_READINGS).fill(0);
       let readIndex = 0;
 
-      function getResults(poses) {
+      function drawResults(poses) {
         let xTotal = 0;
         let yTotal = 0;
         let xMin = VIDEO_WIDTH;
@@ -53,7 +53,7 @@
         let yMax = 0;
         let validPoses = 0;
         poses.forEach((pose) => {
-          if (pose.score >= 0.2) {
+          if (pose.score >= 0.09) {
             validPoses++;
             const { minX, minY, maxX, maxY } = posenet.getBoundingBox(
               pose.keypoints
@@ -133,14 +133,9 @@
         }
 
         const video = document.getElementById("video");
-        video.width = VIDEO_WIDTH;
-        video.height = VIDEO_HEIGHT;
 
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: VIDEO_WIDTH,
-            height: VIDEO_HEIGHT,
-          },
+          video: true,
         });
         video.srcObject = stream;
 
@@ -151,26 +146,28 @@
         });
       }
 
-      const video = document.getElementById("video");
-
       posenet
         .load({
           architecture: "MobileNetV1",
           outputStride: 16,
-          inputResolution: { width: VIDEO_WIDTH, height: VIDEO_HEIGHT },
           multiplier: 0.75,
+          inputResolution: {
+            width: VIDEO_WIDTH,
+            height: VIDEO_HEIGHT,
+          },
         })
-        .then((net) => {
-          setupCamera();
+        .then(async (net) => {
+          const video = await setupCamera();
           video.addEventListener("play", () => {
             setInterval(async () => {
               const poses = await net.estimateMultiplePoses(video, {
-                maxDetections: 10,
+                nmsRadius: 30.0,
               });
-              requestAnimationFrame(() => {
-                getResults(poses);
-              });
-            }, 500);
+              if (window.debug) {
+                console.log(poses);
+              }
+              drawResults(poses);
+            }, 300);
           });
           if (video.readyState === 4) {
             video.play();

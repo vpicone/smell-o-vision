@@ -1,9 +1,10 @@
 let socket = new WebSocket("ws://localhost:8081");
 
 const RED_PIN = 2;
-const YELLOW_PIN = 3;
+const BLUE_PIN = 3;
 const GREEN_PIN = 4;
-const BLUE_PIN = 5;
+const YELLOW_PIN = 5;
+const [CANVAS_WIDTH, CANVAS_HEIGHT] = [300, 167];
 
 class Blob {
   constructor() {
@@ -33,7 +34,7 @@ class Blob {
 let blobs = [];
 
 function setup() {
-  createCanvas(300, 167);
+  createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
   blobs = [new Blob(), new Blob(), new Blob()];
   fill(0, 102, 153);
   frameRate(24);
@@ -42,8 +43,7 @@ function setup() {
 
 const setColor = (activeQuadrant) => {
   if (window.activeQuadrant !== activeQuadrant) {
-    console.log(activeQuadrant);
-    socket.send(activeQuadrant);
+    socket.send(`${activeQuadrant}!`);
     window.activeQuadrant = activeQuadrant;
   }
 };
@@ -61,21 +61,26 @@ function draw() {
         const distance = dist(x, y, blob.pos.x, blob.pos.y);
         sum += (200 * blob.r) / distance;
       });
-      if (window.xAvg < 200) {
-        if (window.yAvg > 200) {
+      // Clockwise from projection wall left
+      if (window.yAvg < 225) {
+        if (window.xAvg < 400) {
+          // projection wall left
           setColor(RED_PIN);
           set(x, y, color(Math.max(sum, 100), 0, 0));
         } else {
-          setColor(YELLOW_PIN);
-          set(x, y, color(Math.max(sum, 100), Math.max(sum, 100), 0));
-        }
-      } else {
-        if (window.yAvg > 200) {
+          // projection wall right
           setColor(BLUE_PIN);
           set(x, y, color(0, 0, Math.max(sum, 100)));
-        } else {
+        }
+      } else {
+        if (window.xAvg > 400) {
+          // entrance wall right
           setColor(GREEN_PIN);
           set(x, y, color(0, Math.max(sum, 100), 0));
+        } else {
+          // entrance wall left
+          setColor(YELLOW_PIN);
+          set(x, y, color(Math.max(sum, 100), Math.max(sum, 100), 0));
         }
       }
     }
@@ -87,7 +92,7 @@ function draw() {
     blob.update();
 
     // Fades blobs in and out
-    if (i < window.peopleCount && blob.r < 30) {
+    if (i < window.peopleCount && blob.r < 25) {
       blob.r++;
     }
     if (i >= window.peopleCount && blob.r > 0) {
@@ -103,22 +108,26 @@ function draw() {
     stroke("white");
     line(0, height / 2, width, height / 2);
     line(width / 2, 0, width / 2, height);
-    fill("red");
+    fill("#663399");
     // 240 135
-    ellipse(window.xAvg, window.yAvg, 20);
+    ellipse(
+      map(window.xAvg, 0, 800, 0, CANVAS_WIDTH),
+      map(window.yAvg, 0, 450, 0, CANVAS_HEIGHT),
+      20
+    );
 
     fill("white");
 
-    // ellipse(xAvg, yAvg, 10);
-
     if (unity) {
       text(`unity: ${unity.toFixed(2)}`, 10, 10);
-      text(`xAvg: ${xAvg}`, 10, 20);
-      text(`yAvg: ${yAvg}`, 10, 30);
-      text(`width: ${map(window.xAvg, 0, width, 0, 240)}`, 100, 30);
-      text(`height: ${map(window.yAvg, 0, height, 0, 135)}`, 100, 40);
+      text(`xAvg: ${window.xAvg}`, 10, 20);
+      text(`yAvg: ${window.yAvg}`, 10, 30);
       text(`people: ${peopleCount}`, 10, 40);
       text(`framerate: ${frameRate().toFixed(2)}`, 10, 50);
+      text(`width: ${width}`, 100, 30);
+      text(`height: ${height}`, 100, 40);
+      text(`mappedx: ${map(window.xAvg, 0, 800, 0, CANVAS_WIDTH)}`, 100, 50);
+      text(`mappedy: ${map(window.yAvg, 0, 450, 0, CANVAS_HEIGHT)}`, 100, 60);
     }
   }
 }
