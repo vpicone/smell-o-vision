@@ -13,21 +13,34 @@
     <script src="sketch.js"></script>
   </head>
   <body>
-    <video loop muted controls id="video" height="450" width="800"></video>
+    <!-- logitech stream cam 800x450 -->
+    <video loop muted controls id="video" height="300" width="400"></video>
 
     <script type="text/javascript">
-      // Shows canvas elements for debugging
-      window.debug = true;
+      // Press 'd' to enable debug mode
+      window.debug = false;
+
+      // Press 's' to add a simulated person (default: 0, max: 3)
+      window.simulatedPeople = 0;
+
       document.addEventListener("keydown", (e) => {
+        e.preventDefault();
         if (e.keyCode === 68) {
           window.debug = !window.debug;
+        }
+        if (e.keyCode === 83) {
+          if (window.simulatedPeople === 3) {
+            window.simulatedPeople = 0;
+          } else {
+            window.simulatedPeople = window.simulatedPeople + 1;
+          }
         }
       });
 
       const NUM_READINGS = 5;
-      //   logitech stream cam
-      const VIDEO_WIDTH = 800;
-      const VIDEO_HEIGHT = 450;
+      //   logitech stream cam 800x450
+      const VIDEO_WIDTH = 400;
+      const VIDEO_HEIGHT = 300;
       let xPreviousAverages = new Array(NUM_READINGS).fill(VIDEO_WIDTH / 2);
       let xRunningTotal = (VIDEO_WIDTH * NUM_READINGS) / 2;
       let yPreviousAverages = new Array(NUM_READINGS).fill(VIDEO_HEIGHT / 2);
@@ -163,9 +176,9 @@
               const poses = await net.estimateMultiplePoses(video, {
                 nmsRadius: 30.0,
               });
-              if (window.debug) {
-                console.log(poses);
-              }
+              //   if (window.debug) {
+              //     console.log(poses);
+              //   }
               drawResults(poses);
             }, 300);
           });

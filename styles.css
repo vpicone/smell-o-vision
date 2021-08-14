@@ -1,19 +1,11 @@
 main {
   position: relative;
 }
-canvas {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100vw !important;
-  height: 100vh !important;
-  filter: blur(2px);
-}
 
 video {
   position: absolute;
   visibility: hidden;
-  opacity: 0.3;
+  opacity: 0.5;
   width: 400px;
   object-fit: fill;
   height: 300px;
@@ -22,4 +14,10 @@ video {
   z-index: 1;
   width: 100vw !important;
   height: 100vh !important;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
 }

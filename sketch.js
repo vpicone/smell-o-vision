@@ -1,133 +1,272 @@
-let socket = new WebSocket("ws://localhost:8081");
+/* References/ Sources
+https://editor.p5js.org/der_erdmann/sketches/Kej6ajBys
+Based off Heat Signature By der_erdmann
 
-const RED_PIN = 2;
-const BLUE_PIN = 3;
-const GREEN_PIN = 4;
-const YELLOW_PIN = 5;
-const [CANVAS_WIDTH, CANVAS_HEIGHT] = [300, 167];
 
-class Blob {
-  constructor() {
-    this.pos = createVector(random(width), random(height));
-    this.velocity = p5.Vector.random2D().mult(random(1, 3));
-    this.r = 0;
-  }
+https://editor.p5js.org/diodesign/sketches/RMdeeqDJs
+https://www.youtube.com/watch?v=76fiD5DvzeQ
+https://openprocessing.org/sketch/387974/
+https://editor.p5js.org/xinxin/sketches/BrpAyJeR
+*/
 
-  debug = () => {
-    noFill();
-    stroke(0);
-    strokeWeight(4);
-    ellipse(this.pos.x, this.pos.y, this.r * 2, this.r * 2);
-  };
+// TODO: re-enable socket here and in setProfile function
+// const socket = new WebSocket("ws://localhost:8081");
 
-  update = () => {
-    if (this.pos.x > width || this.pos.x < 0) {
-      this.velocity.x *= -1;
-    }
-    if (this.pos.y > height || this.pos.y < 0) {
-      this.velocity.y *= -1;
-    }
-    this.pos.add(this.velocity);
-  };
-}
-
-let blobs = [];
-
-function setup() {
-  createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
-  blobs = [new Blob(), new Blob(), new Blob()];
-  fill(0, 102, 153);
-  frameRate(24);
-  textSize(10);
-}
-
-const setColor = (activeQuadrant) => {
-  if (window.activeQuadrant !== activeQuadrant) {
-    socket.send(`${activeQuadrant}!`);
-    window.activeQuadrant = activeQuadrant;
-  }
+let redProfile = {
+  background: "rgba(225, 200, 69, 0.01)",
+  stroke: [183, 0, 0, 0.01],
+  fill: [13, 49, 44, 1],
+  pin: 2,
 };
 
-function draw() {
-  const { unity, xAvg, yAvg, peopleCount } = window;
-  clear();
+let blueProfile = {
+  background: "rgba(80,10,0, 0.01)",
+  stroke: [44, 200, 230, 0.01],
+  fill: [50, 204, 211, 1],
+  pin: 3,
+};
 
-  //   Load pixels for individual manipulation
-  loadPixels();
-  for (let x = 0; x < width; x++) {
-    for (let y = 0; y < height; y++) {
-      let sum = 0;
-      blobs.forEach((blob) => {
-        const distance = dist(x, y, blob.pos.x, blob.pos.y);
-        sum += (200 * blob.r) / distance;
-      });
-      // Clockwise from projection wall left
-      if (window.yAvg < 225) {
-        if (window.xAvg < 400) {
-          // projection wall left
-          setColor(RED_PIN);
-          set(x, y, color(Math.max(sum, 100), 0, 0));
-        } else {
-          // projection wall right
-          setColor(BLUE_PIN);
-          set(x, y, color(0, 0, Math.max(sum, 100)));
-        }
-      } else {
-        if (window.xAvg > 400) {
-          // entrance wall right
-          setColor(GREEN_PIN);
-          set(x, y, color(0, Math.max(sum, 100), 0));
-        } else {
-          // entrance wall left
-          setColor(YELLOW_PIN);
-          set(x, y, color(Math.max(sum, 100), Math.max(sum, 100), 0));
-        }
+let greenProfile = {
+  background: "rgba(33,33,73, 0.01)",
+  stroke: [208, 233, 0, 0.01],
+  fill: [255, 255, 0, 1],
+  pin: 4,
+};
+
+let yellowProfile = {
+  background: "rgba(199, 77, 160, 0.01)",
+  stroke: [255, 215, 0, 0.01],
+  fill: [243, 198, 10, 1],
+  pin: 5,
+};
+
+// sets default profile on load.
+let activeProfile = redProfile;
+let blobs = [];
+
+function Blob() {
+  this.location = createVector(random(width), random(height));
+  this.velocity = p5.Vector.random2D();
+  this.velocity.setMag(20);
+  this.acceleration = createVector();
+  this.maxSpeed = 8;
+  this.maxForce = 5;
+  this.calcSpeed = 1;
+
+  this.update = function () {
+    this.location.add(this.velocity);
+    this.velocity.add(this.acceleration);
+    this.velocity.limit(this.maxSpeed);
+    this.acceleration.mult(0.8);
+    this.calcSpeed = String(this.velocity.magSq());
+  };
+
+  this.display = function () {
+    strokeWeight(map(this.calcSpeed, 5, 20, 0, 160));
+    stroke(...activeProfile.stroke);
+    fill(...activeProfile.fill);
+
+    strokeCap(ROUND);
+    line(
+      this.location.x,
+      this.location.y,
+      this.location.x + this.calcSpeed,
+      this.location.y + this.calcSpeed
+    );
+    ellipse(this.location.x, this.location.y, random(0, 500), 0);
+  };
+
+  this.edges = function () {
+    if (this.location.x > width) {
+      this.location.x = 0;
+    } else if (this.location.x < 0) {
+      this.location.x = width;
+    }
+
+    if (this.location.y > height) {
+      this.location.y = 0;
+    } else if (this.location.y < 0) {
+      this.location.y = height;
+    }
+  };
+
+  this.align = function (blobs) {
+    let perceptionRadius = random(width / 2, width);
+    let steering = createVector();
+    let total = 0;
+
+    for (let other of blobs) {
+      let d = dist(
+        this.location.x,
+        this.location.y,
+        other.location.x,
+        other.location.y
+      );
+      if (other != this && d < perceptionRadius) {
+        steering.add(other.velocity);
+        total++;
       }
     }
+
+    if (total > 0) {
+      steering.div(total);
+      steering.setMag(this.maxSpeed);
+      steering.sub(this.velocity);
+      steering.limit(this.maxForce);
+    }
+    return steering;
+  };
+
+  this.separation = function (blobs) {
+    let perceptionRadius = random(200, 300);
+    let steering = createVector();
+    let total = 0;
+    for (let other of blobs) {
+      let d = dist(
+        this.location.x,
+        this.location.y,
+        other.location.x,
+        other.location.y
+      );
+      if (other != this && d < perceptionRadius) {
+        let diff = p5.Vector.sub(this.location, other.location);
+        diff.div(d * d);
+        steering.add(diff);
+        total += 2;
+      }
+    }
+    if (total > 0) {
+      steering.div(total);
+      steering.setMag(this.maxSpeed);
+      steering.sub(this.velocity);
+      steering.limit(this.maxForce);
+    }
+    return steering;
+  };
+
+  this.cohesion = function (blobs) {
+    let perceptionRadius = random(300, 400);
+    let steering = createVector();
+    let total = 0;
+    for (let other of blobs) {
+      let d = dist(
+        this.location.x,
+        this.location.y,
+        other.location.x,
+        other.location.y
+      );
+      if (other != this && d < perceptionRadius) {
+        steering.add(other.location);
+        total++;
+      }
+    }
+    if (total > 0) {
+      steering.div(total);
+      steering.sub(this.location);
+      steering.setMag(this.maxSpeed);
+      steering.sub(this.velocity);
+      steering.limit(this.maxForce);
+    }
+    return steering;
+  };
+
+  this.flock = function (blobs) {
+    let cohesion = this.cohesion(blobs);
+    let alignment = this.align(blobs);
+    let separation = this.separation(blobs);
+    alignment.mult(random(25, 35));
+    cohesion.mult(random(-35, -25));
+    separation.mult(random(10, 12));
+    this.acceleration.add(alignment);
+    this.acceleration.add(cohesion);
+    this.acceleration.add(separation);
+  };
+}
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  //   let now = hour();
+  //can we use this to change from white to black based on hour of day?
+  background(255);
+
+  //blobs number - this is where it gets updated I eliminated need for multiplier
+  for (let i = 0; i < 4; i++) {
+    blobs.push(new Blob());
   }
-  updatePixels();
+}
+
+function draw() {
+  colorMode(RGB, 100, 100, 100, 1.5);
+  background(activeProfile.background);
+  checkColorProfile();
 
   blobs.forEach((blob, i) => {
-    // Moves the blobs
-    blob.update();
-
-    // Fades blobs in and out
-    if (i < window.peopleCount && blob.r < 25) {
-      blob.r++;
-    }
-    if (i >= window.peopleCount && blob.r > 0) {
-      blob.r--;
+    //   Press 's' to add a simulated person (default: 0, max: 3)
+    if (i < window.peopleCount + window.simulatedPeople) {
+      blob.edges();
+      blob.update();
+      blob.flock(blobs);
+      blob.display();
     }
   });
 
-  // Debug helpers
   if (window.debug) {
-    const video = document.getElementById("video");
-    video.style.visibility = "visible";
-    strokeWeight(1);
-    stroke("white");
-    line(0, height / 2, width, height / 2);
-    line(width / 2, 0, width / 2, height);
+    colorMode(RGB);
+    textSize(32);
+    document.getElementById("video").style.visibility = "visible";
+    strokeWeight(10);
+    stroke("#663399");
+    line(0, windowHeight / 2, windowWidth, windowHeight / 2);
+    line(windowWidth / 2, 0, windowWidth / 2, windowHeight);
     fill("#663399");
-    // 240 135
+
     ellipse(
-      map(window.xAvg, 0, 800, 0, CANVAS_WIDTH),
-      map(window.yAvg, 0, 450, 0, CANVAS_HEIGHT),
+      map(window.xAvg, 0, 400, 0, windowWidth),
+      map(window.yAvg, 0, 300, 0, windowHeight),
       20
     );
 
-    fill("white");
+    strokeWeight(1);
+    if (window.unity) {
+      fill("white");
+      rect(0, 0, 250, 180);
+      fill("#663399");
+      text(`xAvg: ${window.xAvg}`, 10, 30);
+      text(`yAvg: ${window.yAvg}`, 10, 60);
+      text(
+        `people:
+  real: ${window.peopleCount}
+  simulated: ${window.simulatedPeople}`,
+        10,
+        90
+      );
+    }
+  }
+}
 
-    if (unity) {
-      text(`unity: ${unity.toFixed(2)}`, 10, 10);
-      text(`xAvg: ${window.xAvg}`, 10, 20);
-      text(`yAvg: ${window.yAvg}`, 10, 30);
-      text(`people: ${peopleCount}`, 10, 40);
-      text(`framerate: ${frameRate().toFixed(2)}`, 10, 50);
-      text(`width: ${width}`, 100, 30);
-      text(`height: ${height}`, 100, 40);
-      text(`mappedx: ${map(window.xAvg, 0, 800, 0, CANVAS_WIDTH)}`, 100, 50);
-      text(`mappedy: ${map(window.yAvg, 0, 450, 0, CANVAS_HEIGHT)}`, 100, 60);
+function checkColorProfile() {
+  const setProfile = (profile) => {
+    if (window.activeProfile !== profile) {
+      //   socket.send(`${profile.pin}!`);
+      window.activeProfile = profile;
+    }
+  };
+
+  if (window.yAvg < 225) {
+    if (window.xAvg < 400) {
+      // projection wall left
+      setProfile(redProfile);
+    } else {
+      // projection wall right
+      setProfile(blueProfile);
+    }
+  } else {
+    if (window.xAvg > 400) {
+      // entrance wall right
+      setProfile(greenProfile);
+    } else {
+      // entrance wall left
+      setProfile(yellowProfile);
     }
   }
 }
